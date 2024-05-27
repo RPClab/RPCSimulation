@@ -5,9 +5,7 @@
 #include <TROOT.h>
 #include <TSystem.h>
 
-#include <cmath>
 #include <ctime>
-#include <fstream>
 #include <iostream>
 
 #include "Garfield/AvalancheGrid.hh"
@@ -26,11 +24,14 @@
 #include "Garfield/ViewCell.hh"
 #include "Garfield/MediumPlastic.hh"
 
+#include "RPCSim/DefaultFolders.hpp"
+
 #define LOG(x) std::cout << x << std::endl
 
 using namespace Garfield;
 
 int main(int argc, char *argv[]) {
+  RPCSim::setEnv();
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
 
@@ -62,7 +63,7 @@ int main(int argc, char *argv[]) {
 
   // Setup the gas, but one can also use a gasfile.
   MediumMagboltz gas;
-  gas.LoadGasFile("/home/qinzuyin/Garfield/5.0/work/GasFile/build/c2h2f4_94-7_iso_5_sf6_0-3_bis.gas");
+  gas.LoadGasFile(RPCSim::data_folder+"/examples/c2h2f4_94-7_iso_5_sf6_0-3_bis.gas");
   gas.Initialise(true);
 
   //Setup the Geometry

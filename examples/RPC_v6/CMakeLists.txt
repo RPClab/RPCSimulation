@@ -1,17 +1,13 @@
-# ########################################################################################
-# Use the code in this section for standalone projects
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 project(RPC)
-if(NOT TARGET Garfield::Garfield)
-  find_package(Garfield REQUIRED)
-endif()
-# ########################################################################################
+
+message(STATUS "JFJFJFJFJFJFJFJ ${DATA_FOLDER}")
 
 # ---Build executable------------------------------------------------------------
 add_executable(Weight Weight.C)
-target_link_libraries(Weight Garfield::Garfield)
-target_include_directories(Weight PUBLIC /home/qinzuyin/Garfield/5.0/garfieldpp/Source)
-# ---Copy all files locally to the build directory-------------------------------
-foreach(_file c2h2f4_ic4h10_sf6.gas)
-  configure_file(${_file} ${_file} COPYONLY)
-endforeach()
+target_link_libraries(Weight RPCSim::RPCsim)
+install(TARGETS Weight
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/data/c2h2f4_94-7_iso_5_sf6_0-3_bis.gas" DESTINATION "${DATA_FOLDER}/examples/")

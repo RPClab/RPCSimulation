@@ -1,0 +1,25 @@
+#include<string>
+
+namespace RPCSim
+{
+  /**
+   * @brief Folder where the data are installed
+   * 
+   */
+  static const std::string data_folder{"@DATA_FOLDER@"};
+  /**
+   * @brief GARFIELD_INSTALL
+   * 
+   */
+   static const std::string garfield_install{"@CMAKE_INSTALL_PREFIX@"};
+   static const std::string heed_database{"@CMAKE_INSTALL_FULL_DATAROOTDIR@/Heed/database"};
+
+
+  static void setEnv()
+  {
+    setenv("GARFIELD_INSTALL",RPCSim::garfield_install.c_str(),true);
+    setenv("HEED_DATABASE",RPCSim::heed_database.c_str(),true);
+  }
+
+
+}
