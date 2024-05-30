@@ -1,4 +1,4 @@
-add_executable(Weight Weight.C)
+add_executable(Weight Weight.cpp)
 target_link_libraries(Weight RPCSim::RPCSim)
 install(TARGETS Weight
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"

@@ -1,0 +1,6 @@
+add_executable(TGeom TGeom.cpp)
+target_link_libraries(TGeom RPCSim::RPCSim)
+install(TARGETS TGeom
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
