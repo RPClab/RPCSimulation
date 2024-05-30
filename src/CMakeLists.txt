@@ -19,13 +19,8 @@ else()
   endif()
 endif()
 
-message(STATUS "FFFFF ${HEED_DATABASE}  ${GARFIELD_INSTALL}    ${GARFIELD_HOME}" )
-#list(APPEND CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
-
-message(STATUS "SSSSSSSSS ${CMAKE_INSTALL_PREFIX}  ${CMAKE_INSTALL_RPATH}")
-
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/DefaultFolders.hpp.in" "${PROJECT_BINARY_DIR}/include/RPCSim/DefaultFolders.hpp")
-add_library(RPCSim STATIC empty.cpp) # Interface for now
+add_library(RPCSim STATIC empty.cpp)
 target_link_libraries(RPCSim PUBLIC Garfield::Garfield)
 target_link_directories(RPCSim PUBLIC "${CMAKE_INSTALL_FULL_LIBDIR}")
 target_include_directories(RPCSim PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include;${PROJECT_BINARY_DIR}/include>" "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
@@ -38,4 +33,4 @@ install(TARGETS RPCSim
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
         PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/RPCSim"
 )
-add_library(RPCSim::RPCsim ALIAS RPCSim)
+add_library(RPCSim::RPCSim ALIAS RPCSim)

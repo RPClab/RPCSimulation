@@ -1,11 +1,5 @@
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
-project(RPC)
-
-message(STATUS "JFJFJFJFJFJFJFJ ${DATA_FOLDER}")
-
-# ---Build executable------------------------------------------------------------
 add_executable(Weight Weight.C)
-target_link_libraries(Weight RPCSim::RPCsim)
+target_link_libraries(Weight RPCSim::RPCSim)
 install(TARGETS Weight
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"

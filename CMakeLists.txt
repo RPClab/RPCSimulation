@@ -20,7 +20,6 @@ list(APPEND CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
 
 # Where to install data
 set(DATA_FOLDER "${CMAKE_INSTALL_FULL_DATADIR}/data")
-message(STATUS "HHHHHHHHHHHHH ${DATA_FOLDER}")
 
 add_subdirectory(src)
 
