@@ -22,16 +22,21 @@
 using namespace Garfield;
 
 int main(int argc, char *argv[]) {
+
   // Setup all this mess
   RPCSim::setEnv();
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
 
-  // Setup TGeoManager
-  TGeoManager *geom = new TGeoManager("RPCSim", "RPC Simulation");
-
-  // Setup the gas, but one can also use a gasfile.
+    // Setup the gas, but one can also use a gasfile.
+    TGeoManager *geom = new TGeoManager("RPCSim", "RPC Simulation");
   RPCSim::GasMixture gasMixture(RPCSim::data_folder+"/examples/c2h2f4_94-7_iso_5_sf6_0-3_bis.gas");
+
+
+  // Setup TGeoManager
+  
+
+
   //--- define some media
   TGeoMedium* vacuum = new TGeoMedium("Vacuum",1,new TGeoMaterial("Vacuum", 0,0,0));
   TGeoVolume* universe = geom->MakeBox("Universe", vacuum, 270., 270., 120.);
@@ -59,7 +64,7 @@ int main(int argc, char *argv[]) {
 
   TGeoVolume* gas = gGeoManager->MakeBox("Gas",gasMixture(),5,0.05,5); //1m*1m*1mm
   gas->SetLineColor(kRed);
-  gas->SetTransparency(75);
+  gas->SetTransparency(98);
   universe->AddNode(gas,1,new TGeoTranslation(0,0.105,0));
 
 

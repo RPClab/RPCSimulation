@@ -8,6 +8,7 @@ namespace RPCSim
 class Medium
 {
 public:
+  Medium();
   virtual ~Medium() = default;
   TGeoMedium* operator()()
   {
@@ -15,7 +16,9 @@ public:
   }
 protected:
   TGeoMedium* m_medium{nullptr};
-  static TGeoElementTable m_elementTable;
+  static TGeoElementTable* m_elementTable;
+private:
+  void getElementTable();
 };
 
 
