@@ -20,15 +20,18 @@ else()
 endif()
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/DefaultFolders.hpp.in" "${PROJECT_BINARY_DIR}/include/RPCSim/DefaultFolders.hpp")
-add_library(RPCSim STATIC 
+add_library(RPCSim STATIC
+Exceptions.cpp
 Medium.cpp
 GasMixture.cpp
+RPCGeometry.cpp
+Setup.cpp
 )
 target_link_libraries(RPCSim PUBLIC Garfield::Garfield)
 target_link_directories(RPCSim PUBLIC "${CMAKE_INSTALL_FULL_LIBDIR}")
 target_include_directories(RPCSim PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include;${PROJECT_BINARY_DIR}/include>" "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 set_target_properties(RPCSim PROPERTIES PUBLIC_HEADER 
-"${PROJECT_BINARY_DIR}/include/RPCSim/DefaultFolders.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/GasMixture.hpp"
+"${PROJECT_BINARY_DIR}/include/RPCSim/DefaultFolders.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/GasMixture.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Setup.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Exceptions.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/RPCGeometry.hpp"
 )
 install(TARGETS RPCSim
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"

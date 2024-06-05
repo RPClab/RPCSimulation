@@ -1,0 +1,1 @@
+#include "RPCSim/Exceptions.hpp"
