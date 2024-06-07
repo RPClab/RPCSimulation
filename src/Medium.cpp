@@ -25,3 +25,19 @@ RPCSim::Glass::Glass()
   glass->AddElement(m_elementTable->GetElement(20),0.107205);
   m_medium = new TGeoMedium("ElectrodeMedium",1,glass);
 }
+
+RPCSim::Graphite::Graphite()
+{
+  static TGeoMixture* graphite= new TGeoMixture("Graphite",1,1.7);
+  graphite->AddElement(m_elementTable->GetElement(6),1.0);
+  m_medium = new TGeoMedium("Graphite",1,graphite);
+}
+
+RPCSim::Mylar::Mylar()
+{
+  static TGeoMixture* mylar= new TGeoMixture("Mylar",3,1.4);
+  mylar->AddElement(m_elementTable->GetElement(1),0.041959);
+  mylar->AddElement(m_elementTable->GetElement(6),0.625016);
+  mylar->AddElement(m_elementTable->GetElement(8),0.333025);
+  m_medium = new TGeoMedium("Mylar",1,mylar);
+}

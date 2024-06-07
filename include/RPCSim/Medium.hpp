@@ -28,6 +28,17 @@ public:
   Glass();
 };
 
+class Graphite final : public Medium
+{
+  public:
+  Graphite();
+};
+
+class Mylar final : public Medium
+{
+  public:
+  Mylar();
+};
 
 }
 #endif

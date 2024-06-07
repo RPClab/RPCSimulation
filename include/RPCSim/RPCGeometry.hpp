@@ -29,8 +29,10 @@ private:
   // Hardcoded value for now
   const double m_gasGapThickness{0.1}; //1mm
   const double m_electrodeThickness{0.11}; //1.1mm
-  const double m_length{50}; //50cm
-  const double m_width{50}; //50cm
+  const double m_graphiteThickness{0.02}; //200um
+  const double m_mylarThickness{0.02}; //200um
+  const double m_length{1}; //50cm
+  const double m_width{1}; //50cm
   RPCSim::GasMixture* m_gas_mixture{nullptr};
   RPCSim::Medium      m_electrode_medium{RPCSim::Glass()};
 };
