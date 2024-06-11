@@ -37,19 +37,22 @@ void RPCSim::RPCGeometry::build()
   RPCSim::Graphite graphite;
   RPCSim::Mylar mylar;
   // TODO Check anode and cathode name I'm always confused about such Chemist words !!!
-  static double position = 0; // Position of the center;
+  double position = 0; // Position of the bottom;
   // Mylar
   TGeoVolume* mylar_layer_1 = gGeoManager->MakeBox("MylarLayerAnode",mylar(),m_length/2.,m_mylarThickness/2.,m_width/2.0); //1m*1m*200um
   mylar_layer_1->SetLineColor(kGreen);
   mylar_layer_1->SetTransparency(0);
   universe->AddNode(mylar_layer_1,1,new TGeoTranslation(0,position,0));
-  position+=m_graphiteThickness/2.+m_mylarThickness/2.;
+  m_HVAnodePosition=-m_mylarThickness/2;
+  m_startGasGap=m_mylarThickness/2+m_graphiteThickness+m_electrodeThickness;
+  m_endGasGap=m_mylarThickness/2+m_graphiteThickness+m_electrodeThickness+m_gasGapThickness;
+  position+=m_graphiteThickness/2+m_mylarThickness/2;
   // Graphite layer
   TGeoVolume* graphite_layer_1 = gGeoManager->MakeBox("GraphiteLayerAnode",graphite(),m_length/2.,m_graphiteThickness/2.,m_width/2.0); //1m*1m*200um
   graphite_layer_1->SetLineColor(kBlack);
   graphite_layer_1->SetTransparency(0);
   universe->AddNode(graphite_layer_1,1,new TGeoTranslation(0,position,0));
-  position+=m_graphiteThickness/2.+m_electrodeThickness/2.;
+  position+=m_graphiteThickness/2+m_electrodeThickness/2.;
   // Anode
   TGeoVolume* anode = gGeoManager->MakeBox("Anode",m_electrode_medium(),m_length/2.,m_electrodeThickness/2.,m_width/2.0); //1m*1m*1.1mm
   anode->SetLineColor(kBlue);
@@ -79,8 +82,19 @@ void RPCSim::RPCGeometry::build()
   mylar_layer_2->SetLineColor(kGreen);
   mylar_layer_2->SetTransparency(0);
   universe->AddNode(mylar_layer_2,1,new TGeoTranslation(0,position,0));
+  m_HVCathodePosition=position-m_mylarThickness;
   gGeoManager->CloseGeometry();
 }
+
+  double RPCSim::RPCGeometry::HVAnodePosition()
+  {
+    return m_HVAnodePosition;
+  }
+
+  double RPCSim::RPCGeometry::HVCathodePosition()
+  {
+    return m_HVCathodePosition;
+  }
 
 Garfield::Geometry* RPCSim::RPCGeometry::getGeometry()
 {
@@ -93,3 +107,12 @@ Garfield::Geometry* RPCSim::RPCGeometry::getGeometry()
 }
 
 
+  double RPCSim::RPCGeometry::startGasGap()
+  {
+    return m_startGasGap;
+  }
+
+  double RPCSim::RPCGeometry::endGasGap()
+  {
+    return m_endGasGap;
+  }

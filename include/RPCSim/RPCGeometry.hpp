@@ -24,17 +24,26 @@ public:
   void setElectrodeMaterial(const RPCSim::Medium& medium = RPCSim::Glass());
   void build();
   void draw(const std::string& options="ogl");
+  double HVAnodePosition();
+  double startGasGap();
+  double endGasGap();
+  double HVCathodePosition();
   Garfield::Geometry* getGeometry();
 private:
   // Hardcoded value for now
   const double m_gasGapThickness{0.1}; //1mm
   const double m_electrodeThickness{0.11}; //1.1mm
-  const double m_graphiteThickness{0.02}; //200um
-  const double m_mylarThickness{0.02}; //200um
-  const double m_length{1}; //50cm
-  const double m_width{1}; //50cm
+  const double m_graphiteThickness{0.01}; //100um
+  const double m_mylarThickness{0.01}; //100um
+  const double m_length{50}; //50cm
+  const double m_width{50}; //50cm
   RPCSim::GasMixture* m_gas_mixture{nullptr};
   RPCSim::Medium      m_electrode_medium{RPCSim::Glass()};
+  // Position of the languettes for HV
+  double m_HVAnodePosition{0};
+  double m_HVCathodePosition{0};
+  double m_startGasGap{0};
+  double m_endGasGap{0};
 };
 
 }

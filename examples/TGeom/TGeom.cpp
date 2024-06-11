@@ -47,8 +47,8 @@ int main(int argc, char *argv[]) try
   // Create electric field and strips
   Garfield::ComponentAnalyticField cmp;
   cmp.SetMedium(gasMixture.getMagboltzMedium());
-  cmp.AddPlaneY(0,0,"Anode");
-  cmp.AddPlaneY(0.32,-6600,"Cathode");
+  cmp.AddPlaneY(my_rpc.HVAnodePosition(),0,"Anode");
+  cmp.AddPlaneY(my_rpc.HVCathodePosition(),-6600,"Cathode");
   constexpr double pitch = 4;
   constexpr double extar=0.1;
   const std::size_t nbr_strips{12};
@@ -126,9 +126,9 @@ int main(int argc, char *argv[]) try
   // Setting the timer for the running time of the algorithm.
   std::clock_t start = std::clock();
 
-
+  std::cout<<"Start gas gap ="<<my_rpc.startGasGap()<<" end="<<my_rpc.endGasGap()<<std::endl;
   // Simulate a charged-particle track.
-  track.NewTrack(0, 0., 0, 0, 0, 1, 0);
+  track.NewTrack(0, my_rpc.startGasGap()+0.001, 0, 0, 0, 1, 0);
   // Retrieve the clusters along the track.
   for (const auto &cluster : track.GetClusters()) {
     // Loop over the electrons in the cluster.
