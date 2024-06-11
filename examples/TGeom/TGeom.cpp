@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) try
   my_rpc.fillGasGap(&gasMixture);
   my_rpc.build();
   my_rpc.draw();
+  std::cout<<"Creating RPC with length : "<<my_rpc.getDimensions().length()<<" width : "<<my_rpc.getDimensions().width()<<" thickness : "<<my_rpc.getDimensions().heigth()<<std::endl;
   
   // Create electric field and strips
   Garfield::ComponentAnalyticField cmp;

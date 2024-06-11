@@ -6,10 +6,17 @@
 #include <iostream>
 
 
+void RPCSim::RPCGeometry::setHeight()
+{
+  m_dimensions[2]=  m_gasGapThickness+2*m_electrodeThickness+2*m_graphiteThickness+2*m_mylarThickness;
+}
+
 RPCSim::RPCGeometry::RPCGeometry()
 {
   if(gGeoManager==nullptr) static TGeoManager *geom = new TGeoManager("RPCSim", "RPC Simulation"); //Should be in other place !!
   else static TGeoManager *geom= gGeoManager;
+  setLength();
+  setWidth();
 }
 
 void RPCSim::RPCGeometry::setElectrodeMaterial(const RPCSim::Medium& medium)
@@ -39,7 +46,7 @@ void RPCSim::RPCGeometry::build()
   // TODO Check anode and cathode name I'm always confused about such Chemist words !!!
   double position = 0; // Position of the bottom;
   // Mylar
-  TGeoVolume* mylar_layer_1 = gGeoManager->MakeBox("MylarLayerAnode",mylar(),m_length/2.,m_mylarThickness/2.,m_width/2.0); //1m*1m*200um
+  TGeoVolume* mylar_layer_1 = gGeoManager->MakeBox("MylarLayerAnode",mylar(),m_dimensions.length()/2.,m_mylarThickness/2.,m_dimensions.width()/2.0); //1m*1m*200um
   mylar_layer_1->SetLineColor(kGreen);
   mylar_layer_1->SetTransparency(0);
   universe->AddNode(mylar_layer_1,1,new TGeoTranslation(0,position,0));
@@ -48,42 +55,43 @@ void RPCSim::RPCGeometry::build()
   m_endGasGap=m_mylarThickness/2+m_graphiteThickness+m_electrodeThickness+m_gasGapThickness;
   position+=m_graphiteThickness/2+m_mylarThickness/2;
   // Graphite layer
-  TGeoVolume* graphite_layer_1 = gGeoManager->MakeBox("GraphiteLayerAnode",graphite(),m_length/2.,m_graphiteThickness/2.,m_width/2.0); //1m*1m*200um
+  TGeoVolume* graphite_layer_1 = gGeoManager->MakeBox("GraphiteLayerAnode",graphite(),m_dimensions.length()/2.,m_graphiteThickness/2.,m_dimensions.width()/2.0); //1m*1m*200um
   graphite_layer_1->SetLineColor(kBlack);
   graphite_layer_1->SetTransparency(0);
   universe->AddNode(graphite_layer_1,1,new TGeoTranslation(0,position,0));
   position+=m_graphiteThickness/2+m_electrodeThickness/2.;
   // Anode
-  TGeoVolume* anode = gGeoManager->MakeBox("Anode",m_electrode_medium(),m_length/2.,m_electrodeThickness/2.,m_width/2.0); //1m*1m*1.1mm
+  TGeoVolume* anode = gGeoManager->MakeBox("Anode",m_electrode_medium(),m_dimensions.length()/2.,m_electrodeThickness/2.,m_dimensions.width()/2.0); //1m*1m*1.1mm
   anode->SetLineColor(kBlue);
   anode->SetTransparency(0);
   universe->AddNode(anode,1,new TGeoTranslation(0,position,0));
   position+=m_electrodeThickness/2.+m_gasGapThickness/2;
   // Gas
-  TGeoVolume* gas = gGeoManager->MakeBox("Gas",m_gas_mixture->operator()(),m_length/2,m_gasGapThickness/2.,m_width/2.0); //1m*1m*1mm
+  TGeoVolume* gas = gGeoManager->MakeBox("Gas",m_gas_mixture->operator()(),m_dimensions.length()/2.,m_gasGapThickness/2.,m_dimensions.width()/2.0); //1m*1m*1mm
   gas->SetLineColor(kRed);
   gas->SetTransparency(50);
   universe->AddNode(gas,1,new TGeoTranslation(0,position,0));
   // Cathode
   position+=m_electrodeThickness/2.+m_gasGapThickness/2;
-  TGeoVolume* cathode = gGeoManager->MakeBox("Cathode",m_electrode_medium(),m_length/2,m_electrodeThickness/2.0,m_width/2.0); //1m*1m*1.1mm
+  TGeoVolume* cathode = gGeoManager->MakeBox("Cathode",m_electrode_medium(),m_dimensions.length()/2.,m_electrodeThickness/2.0,m_dimensions.width()/2.0); //1m*1m*1.1mm
   cathode->SetLineColor(kBlue);
   cathode->SetTransparency(0);  
   universe->AddNode(cathode,1,new TGeoTranslation(0,position,0));
   position+=m_graphiteThickness/2.+m_electrodeThickness/2.;
   // Graphite layer
-  TGeoVolume* graphite_layer_2 = gGeoManager->MakeBox("GraphiteLayerCathode",graphite(),m_length/2.,m_graphiteThickness/2.,m_width/2.0); //1m*1m*200um
+  TGeoVolume* graphite_layer_2 = gGeoManager->MakeBox("GraphiteLayerCathode",graphite(),m_dimensions.length()/2.,m_graphiteThickness/2.,m_dimensions.width()/2.0); //1m*1m*200um
   graphite_layer_1->SetLineColor(kBlack);
   graphite_layer_1->SetTransparency(0);
   universe->AddNode(graphite_layer_2,1,new TGeoTranslation(0,position,0));
   position+=m_graphiteThickness/2.+m_mylarThickness/2.;
     // Mylar
-  TGeoVolume* mylar_layer_2 = gGeoManager->MakeBox("MylarLayerCathode",mylar(),m_length/2.,m_mylarThickness/2.,m_width/2.0); //1m*1m*200um
+  TGeoVolume* mylar_layer_2 = gGeoManager->MakeBox("MylarLayerCathode",mylar(),m_dimensions.length()/2.,m_mylarThickness/2.,m_dimensions.width()/2.0); //1m*1m*200um
   mylar_layer_2->SetLineColor(kGreen);
   mylar_layer_2->SetTransparency(0);
   universe->AddNode(mylar_layer_2,1,new TGeoTranslation(0,position,0));
   m_HVCathodePosition=position-m_mylarThickness;
   gGeoManager->CloseGeometry();
+  setHeight();
 }
 
   double RPCSim::RPCGeometry::HVAnodePosition()
