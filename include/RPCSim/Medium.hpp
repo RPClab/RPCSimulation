@@ -40,5 +40,17 @@ class Mylar final : public Medium
   Mylar();
 };
 
+class FR4 final : public Medium
+{
+  public:
+  FR4();
+};
+
+class Copper final : public Medium
+{
+  public:
+  Copper();
+};
+
 }
 #endif

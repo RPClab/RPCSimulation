@@ -4,6 +4,7 @@
 #include "RPCSim/GasMixture.hpp"
 #include "RPCSim/Medium.hpp"
 #include "RPCSim/Dimensions.hpp"
+#include "RPCSim/PCBGeometry.hpp"
 #include <string>
 
 namespace Garfield
@@ -15,13 +16,16 @@ namespace RPCSim
 {
 
 class GasMixture;
+class PCBGeometry;
 
 class RPCGeometry
 {
 public:
   RPCGeometry();
-  void setLength(const double& length=50) { m_dimensions[0]=length;}
-  void setWidth(const double& width=50) { m_dimensions[1]=width;}
+  void putOnTop(PCBGeometry&);
+  void putOnBottom(PCBGeometry&);
+  void setLength(const double& length=5) { m_dimensions[0]=length;}
+  void setWidth(const double& width=5) { m_dimensions[1]=width;}
   void fillGasGap(RPCSim::GasMixture* gas_mixture);
   void setElectrodeMaterial(const RPCSim::Medium& medium = RPCSim::Glass());
   void build();
@@ -32,6 +36,7 @@ public:
   double HVCathodePosition();
   RPCSim::Dimensions getDimensions() {return m_dimensions;}
   Garfield::Geometry* getGeometry();
+  void closeGeometry(); //FIXME fix this
 private:
   void setHeight();
   // Hardcoded value for now

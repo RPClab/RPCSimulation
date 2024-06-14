@@ -41,3 +41,29 @@ RPCSim::Mylar::Mylar()
   mylar->AddElement(m_elementTable->GetElement(8),0.333025);
   m_medium = new TGeoMedium("Mylar",1,mylar);
 }
+
+RPCSim::FR4::FR4()
+{
+  // Create Epoxy material
+  static TGeoMixture* epoxy= new TGeoMixture("Epoxy",3,1.3);
+  epoxy->AddElement(m_elementTable->GetElement(1),44);
+  epoxy->AddElement(m_elementTable->GetElement(6),15);
+  epoxy->AddElement(m_elementTable->GetElement(8),7);
+  static TGeoMedium* epoxy_medium = new TGeoMedium("Epoxy",1,epoxy);
+  // SiO2
+  static TGeoMixture* sio2= new TGeoMixture("SiO2",2,2.20);
+  sio2->AddElement(m_elementTable->GetElement(14),1);
+  sio2->AddElement(m_elementTable->GetElement(8),2);
+  static TGeoMedium* sio2_medium = new TGeoMedium("SiO2",1,sio2);
+
+  static TGeoMixture* fr4= new TGeoMixture("FR4",2,1.85);
+  fr4->AddElement(epoxy,0.472);
+  fr4->AddElement(sio2,0.528);
+  m_medium = new TGeoMedium("FR4",1,fr4);
+}
+
+RPCSim::Copper::Copper()
+{
+  static TGeoMaterial *copper = new TGeoMaterial("Copper",63.546,29,8.935);
+  m_medium = new TGeoMedium("Copper",1,copper);
+}

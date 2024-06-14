@@ -22,6 +22,7 @@
 #include "RPCSim/Exceptions.hpp"
 #include "RPCSim/Setup.hpp"
 #include "RPCSim/RPCGeometry.hpp"
+#include "RPCSim/PCBGeometry.hpp"
 
 
 #define LOG(x) std::cout << x << std::endl
@@ -36,12 +37,21 @@ int main(int argc, char *argv[]) try
   TApplication app("app", &argc, argv);
   //plottingEngine.SetDefaultStyle();
 
+  // Top strip pannel
+  RPCSim::PCBGeometry top_strip_pannel;
+
+  // Bottom strip pannel
+  RPCSim::PCBGeometry bottom_strip_pannel;
+
   RPCSim::RPCGeometry my_rpc;
   // Setup the gas, but one can also use a gasfile.
   RPCSim::GasMixture gasMixture(RPCSim::data_folder+"/examples/c2h2f4_94-7_iso_5_sf6_0-3_bis.gas");
   //gasMixture.generate(7000.0,0.,0.);
   my_rpc.fillGasGap(&gasMixture);
   my_rpc.build();
+  my_rpc.putOnTop(top_strip_pannel);
+  my_rpc.putOnBottom(bottom_strip_pannel);
+  my_rpc.closeGeometry();
   my_rpc.draw();
   std::cout<<"Creating RPC with length : "<<my_rpc.getDimensions().length()<<" width : "<<my_rpc.getDimensions().width()<<" thickness : "<<my_rpc.getDimensions().heigth()<<std::endl;
   
@@ -129,18 +139,8 @@ int main(int argc, char *argv[]) try
 
   std::cout<<"Start gas gap ="<<my_rpc.startGasGap()<<" end="<<my_rpc.endGasGap()<<std::endl;
   // Simulate a charged-particle track.
-  track.NewTrack(0, my_rpc.startGasGap()+0.001, 0, 0, 0, 1, 0);
+  track.NewTrack(0, my_rpc.endGasGap(), 0, 0, 0, -1, 0);
   // Retrieve the clusters along the track.
-  for (const auto &cluster : track.GetClusters()) {
-    // Loop over the electrons in the cluster.
-    for (const auto &electron : cluster.electrons) {
-      // Simulate the electron track
-      aval.AvalancheElectron(electron.x, electron.y, electron.z, electron.t,electron.e,electron.dx,electron.dy, electron.dz);
-    }
-  }
-
-    track.NewTrack(0, 0., 0, 0.25, 0, 1, 0);
-    // Retrieve the clusters along the track.
   for (const auto &cluster : track.GetClusters()) {
     // Loop over the electrons in the cluster.
     for (const auto &electron : cluster.electrons) {

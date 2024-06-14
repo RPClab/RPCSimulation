@@ -24,6 +24,7 @@ add_library(RPCSim STATIC
 Exceptions.cpp
 Medium.cpp
 GasMixture.cpp
+PCBGeometry.cpp
 RPCGeometry.cpp
 Setup.cpp
 )
@@ -31,7 +32,7 @@ target_link_libraries(RPCSim PUBLIC Garfield::Garfield)
 target_link_directories(RPCSim PUBLIC "${CMAKE_INSTALL_FULL_LIBDIR}")
 target_include_directories(RPCSim PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include;${PROJECT_BINARY_DIR}/include>" "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 set_target_properties(RPCSim PROPERTIES PUBLIC_HEADER 
-"${PROJECT_BINARY_DIR}/include/RPCSim/DefaultFolders.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/GasMixture.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Setup.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Exceptions.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Dimensions.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/RPCGeometry.hpp"
+"${PROJECT_BINARY_DIR}/include/RPCSim/DefaultFolders.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/GasMixture.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Setup.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Exceptions.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Dimensions.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/RPCGeometry.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/PCBGeometry.hpp"
 )
 install(TARGETS RPCSim
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
