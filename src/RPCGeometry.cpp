@@ -10,20 +10,22 @@
 
 void RPCSim::RPCGeometry::putOnTop(PCBGeometry& top)
 {
-  /*TGeoTranslation translate(0,m_dimensions.heigth()-0.005,0);
+  top.setType(PCBGeometry::Type::Top);
+  TGeoTranslation translate(0,m_dimensions.heigth(),0);
   top.translate(translate);
   top.setLength(m_dimensions[0]);
   top.setWidth(m_dimensions[1]);
-  top.build();*/
+  top.build();
 }
 
 void RPCSim::RPCGeometry::putOnBottom(PCBGeometry& bottom) //FIXME
 {
-  /*TGeoTranslation translate(0,-bottom.getDimensions()[2],0);
+  bottom.setType(PCBGeometry::Type::Bottom);
+  TGeoTranslation translate(0,0,0);
   bottom.translate(translate);
   bottom.setLength(m_dimensions[0]);
   bottom.setWidth(m_dimensions[1]);
-  bottom.build();*/
+  bottom.build();
 }
 
 void RPCSim::RPCGeometry::setHeight()

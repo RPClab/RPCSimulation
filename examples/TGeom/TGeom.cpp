@@ -55,6 +55,11 @@ int main(int argc, char *argv[]) try
   my_rpc.draw();
   std::cout<<"Creating RPC with length : "<<my_rpc.getDimensions().length()<<" width : "<<my_rpc.getDimensions().width()<<" thickness : "<<my_rpc.getDimensions().heigth()<<std::endl;
   
+  std::cout<<"Ground PCB positions :"<<std::endl;
+  std::cout<<top_strip_pannel.groundPosition()<<std::endl;
+  std::cout<<bottom_strip_pannel.groundPosition()<<std::endl;
+
+
   // Create electric field and strips
   Garfield::ComponentAnalyticField cmp;
   cmp.SetMedium(gasMixture.getMagboltzMedium());
@@ -65,7 +70,8 @@ int main(int argc, char *argv[]) try
   const std::size_t nbr_strips{12};
   for(std::size_t i=0;i!=nbr_strips;++i)
   {
-    cmp.AddStripOnPlaneY('z', 0.0, i*pitch+(i*extar), (i+1)*pitch+(i*extar), "strip_"+std::to_string(i));
+    cmp.AddStripOnPlaneY('z', top_strip_pannel.stripPosition(), i*pitch+(i*extar), (i+1)*pitch+(i*extar), "strip_top_"+std::to_string(i));
+    cmp.AddStripOnPlaneY('z', bottom_strip_pannel.stripPosition(), i*pitch+(i*extar), (i+1)*pitch+(i*extar), "strip_bottom_"+std::to_string(i)); // For now they are on the same direction //TODO CHECK THIS
   }
   ViewField fieldView;
   fieldView.SetComponent(&cmp);
@@ -84,7 +90,8 @@ int main(int argc, char *argv[]) try
   // using the weighting field provided by the Component object cmp.
   for(std::size_t i=0;i!=12;++i)
   {
-    sensor.AddElectrode(&cmp, "strip_"+std::to_string(i));
+    sensor.AddElectrode(&cmp, "strip_top_"+std::to_string(i));
+    sensor.AddElectrode(&cmp, "strip_bottom_"+std::to_string(i));
   }
   // Set the time bins.
   const unsigned int nTimeBins = 1000;
@@ -124,6 +131,27 @@ int main(int argc, char *argv[]) try
     chargeView->SetSensor(&sensor);
   }
 
+    // Preparing the plotting of the induced charge and signal of the electrode
+  // readout.
+  ViewSignal *signalView2 = nullptr;
+  TCanvas *cSignal2 = nullptr;
+  if (plotSignal) {
+    cSignal2 = new TCanvas("cSignal2", "", 600, 600);
+    signalView2 = new ViewSignal();
+    signalView2->SetCanvas(cSignal2);
+    signalView2->SetSensor(&sensor);
+  }
+
+  ViewSignal *chargeView2 = nullptr;
+  TCanvas *cCharge2 = nullptr;
+
+  if (plotSignal) {
+    cCharge2 = new TCanvas("cCharge2", "Charge", 600, 600);
+    chargeView2 = new ViewSignal();
+    chargeView2->SetCanvas(cCharge2);
+    chargeView2->SetSensor(&sensor);
+  }
+
 
   Garfield::ViewDrift view_drift;
   // Set up Heed.
@@ -156,15 +184,25 @@ int main(int argc, char *argv[]) try
 
   if (plotSignal) {
     // Plot signals
-    signalView->PlotSignal("strip_0");
+    signalView->PlotSignal("strip_top_0");
     cSignal->Update();
     //gSystem->ProcessEvents();
 
     // Plot induced charge
-    sensor.IntegrateSignal("strip_0");
-    chargeView->PlotSignal("strip_0");
+    sensor.IntegrateSignal("strip_top_0");
+    chargeView->PlotSignal("strip_top_0");
     cCharge->Update();
     //gSystem->ProcessEvents();
+
+        // Plot signals
+    signalView2->PlotSignal("strip_bottom_0");
+    cSignal2->Update();
+    //gSystem->ProcessEvents();
+
+    // Plot induced charge
+    sensor.IntegrateSignal("strip_bottom_0");
+    chargeView2->PlotSignal("strip_bottom_0");
+    cCharge2->Update();
   }
   LOG("Script: Total induced charge = " << sensor.GetTotalInducedCharge("strip_0")<< " [fC].");
 
