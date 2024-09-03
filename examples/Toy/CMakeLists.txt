@@ -1,0 +1,6 @@
+add_executable(Toy Toy.cpp)
+target_link_libraries(Toy PRIVATE RPCSim::RPCSim CLI11::CLI11)
+install(TARGETS Toy
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")

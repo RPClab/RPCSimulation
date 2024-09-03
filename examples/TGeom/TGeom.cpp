@@ -38,45 +38,68 @@ int main(int argc, char *argv[]) try
   //plottingEngine.SetDefaultStyle();
 
   // Top strip pannel
-  RPCSim::PCBGeometry top_strip_pannel;
+  //RPCSim::PCBGeometry top_strip_pannel;
 
   // Bottom strip pannel
-  RPCSim::PCBGeometry bottom_strip_pannel;
+  //RPCSim::PCBGeometry bottom_strip_pannel;
 
-  RPCSim::RPCGeometry my_rpc;
+  //RPCSim::RPCGeometry my_rpc;
   // Setup the gas, but one can also use a gasfile.
   RPCSim::GasMixture gasMixture(RPCSim::data_folder+"/examples/c2h2f4_94-7_iso_5_sf6_0-3_bis.gas");
+
+
+// Create the ROOT geometry.
+TGeoManager* geoman = new TGeoManager("world", "geometry");
+// Create the ROOT material and medium.
+// For simplicity we use the predefined material "Vacuum".
+TGeoMaterial* matVacuum = new TGeoMaterial("Vacuum", 0, 0, 0);
+TGeoMedium* medVacuum = new TGeoMedium("Vacuum", 1, matVacuum);
+// In this simple case, the tube is also the top volume.
+TGeoVolume* top = gGeoManager->MakeBox("Gas",gasMixture.operator()(),100/2.,100/2.,0.1/2.0);
+geoman->SetTopVolume(top);
+geoman->CloseGeometry();
+// Create the Garfield geometry.
+GeometryRoot* geo = new GeometryRoot();
+// Pass the pointer to the TGeoManager.
+geo->SetGeometry(geoman);
+// Associate the ROOT medium with the Garfield medium.
+geo->SetMedium("Vacuum", gasMixture.getMagboltzMedium());
+
   //gasMixture.generate(7000.0,0.,0.);
-  my_rpc.fillGasGap(&gasMixture);
-  my_rpc.build();
-  my_rpc.putOnTop(top_strip_pannel);
-  my_rpc.putOnBottom(bottom_strip_pannel);
-  my_rpc.closeGeometry();
-  my_rpc.draw();
-  std::cout<<"Creating RPC with length : "<<my_rpc.getDimensions().length()<<" width : "<<my_rpc.getDimensions().width()<<" thickness : "<<my_rpc.getDimensions().heigth()<<std::endl;
+  //my_rpc.fillGasGap(&gasMixture);
+  //my_rpc.build();
+  //my_rpc.putOnTop(top_strip_pannel);
+  //my_rpc.putOnBottom(bottom_strip_pannel);
+  //my_rpc.closeGeometry();
+  //my_rpc.getGeometry();
+  //my_rpc.draw();
+  //std::cout<<"Creating RPC with length : "<<my_rpc.getDimensions().length()<<" width : "<<my_rpc.getDimensions().width()<<" thickness : "<<my_rpc.getDimensions().heigth()<<std::endl;
   
-  std::cout<<"Ground PCB positions :"<<std::endl;
-  std::cout<<top_strip_pannel.groundPosition()<<std::endl;
-  std::cout<<bottom_strip_pannel.groundPosition()<<std::endl;
+  //std::cout<<"Ground PCB positions :"<<std::endl;
+  //std::cout<<top_strip_pannel.groundPosition()<<std::endl;
+  //std::cout<<bottom_strip_pannel.groundPosition()<<std::endl;
 
 
   // Create electric field and strips
   Garfield::ComponentAnalyticField cmp;
   cmp.SetMedium(gasMixture.getMagboltzMedium());
-  cmp.AddPlaneY(my_rpc.HVAnodePosition(),0,"Anode");
-  cmp.AddPlaneY(my_rpc.HVCathodePosition(),-6600,"Cathode");
+  cmp.SetGeometry(geo);
+  cmp.EnableDebugging();
+  
+  cmp.AddPlaneY(0,0,"Anode");
+  cmp.AddPlaneY(0.1,-6600,"Cathode");
   constexpr double pitch = 4;
   constexpr double extar=0.1;
   const std::size_t nbr_strips{12};
   for(std::size_t i=0;i!=nbr_strips;++i)
   {
-    cmp.AddStripOnPlaneY('z', top_strip_pannel.stripPosition(), i*pitch+(i*extar), (i+1)*pitch+(i*extar), "strip_top_"+std::to_string(i));
-    cmp.AddStripOnPlaneY('z', bottom_strip_pannel.stripPosition(), i*pitch+(i*extar), (i+1)*pitch+(i*extar), "strip_bottom_"+std::to_string(i)); // For now they are on the same direction //TODO CHECK THIS
+    cmp.AddStripOnPlaneY('z', 0, i*pitch+(i*extar), (i+1)*pitch+(i*extar), "strip_top_"+std::to_string(i));
+    cmp.AddStripOnPlaneY('z', 0.1, i*pitch+(i*extar), (i+1)*pitch+(i*extar), "strip_bottom_"+std::to_string(i)); // For now they are on the same direction //TODO CHECK THIS
   }
-  ViewField fieldView;
-  fieldView.SetComponent(&cmp);
+  //ViewField fieldView;
+  //fieldView.SetComponent(&cmp);
   // Plot the potential along the hole axis.
-  fieldView.PlotProfile(-50., 50.,-0.05, 0.38, -50.0, 50.0);
+  //fieldView.PlotProfile(-50., 50.,-0.05, 0.38, -50.0, 50.0);
 
 
 
@@ -84,6 +107,7 @@ int main(int argc, char *argv[]) try
   constexpr bool plotSignal = true;
 
   Garfield::Sensor sensor;
+  sensor.EnableDebugging();
   // Calculate the electric field using the Component object cmp.
   sensor.AddComponent(&cmp);
   // Request signal calculation for the electrode named "s",
@@ -102,6 +126,7 @@ int main(int argc, char *argv[]) try
 
   // Create the AvalancheMicroscopic.
   AvalancheMicroscopic aval;
+  aval.EnableDebugging();
   aval.SetSensor(&sensor);
   aval.EnableSignalCalculation();
   aval.UseWeightingPotential();
@@ -156,6 +181,7 @@ int main(int argc, char *argv[]) try
   Garfield::ViewDrift view_drift;
   // Set up Heed.
   TrackHeed track;
+  track.EnableDebugging();
   //track.EnableDeltaElectronTransport();
   track.SetSensor(&sensor);
   // Set the particle type and momentum [eV/c].
@@ -165,9 +191,9 @@ int main(int argc, char *argv[]) try
   // Setting the timer for the running time of the algorithm.
   std::clock_t start = std::clock();
 
-  std::cout<<"Start gas gap ="<<my_rpc.startGasGap()<<" end="<<my_rpc.endGasGap()<<std::endl;
   // Simulate a charged-particle track.
-  track.NewTrack(0, my_rpc.endGasGap(), 0, 0, 0, -1, 0);
+  double pos = -5000;
+  track.NewTrack(0., 0., 0.0, 0, 0, -1, 0);
   // Retrieve the clusters along the track.
   for (const auto &cluster : track.GetClusters()) {
     // Loop over the electrons in the cluster.
@@ -183,26 +209,31 @@ int main(int argc, char *argv[]) try
 
 
   if (plotSignal) {
-    // Plot signals
-    signalView->PlotSignal("strip_top_0");
-    cSignal->Update();
-    //gSystem->ProcessEvents();
+    for(std::size_t i =0; i!=20 ;++i)
+    {
+      std::string name{"strip_top_"+std::to_string(i)};
+      std::string name2{"strip_bottom_"+std::to_string(i)};
+      // Plot signals
+      signalView->PlotSignal(name);
+      cSignal->Update();
+      //gSystem->ProcessEvents();
 
-    // Plot induced charge
-    sensor.IntegrateSignal("strip_top_0");
-    chargeView->PlotSignal("strip_top_0");
-    cCharge->Update();
-    //gSystem->ProcessEvents();
+      // Plot induced charge
+      sensor.IntegrateSignal(name);
+      chargeView->PlotSignal(name);
+      cCharge->Update();
+      //gSystem->ProcessEvents();
 
-        // Plot signals
-    signalView2->PlotSignal("strip_bottom_0");
-    cSignal2->Update();
-    //gSystem->ProcessEvents();
+      // Plot signals
+      signalView2->PlotSignal(name2);
+      cSignal2->Update();
+      //gSystem->ProcessEvents();
 
-    // Plot induced charge
-    sensor.IntegrateSignal("strip_bottom_0");
-    chargeView2->PlotSignal("strip_bottom_0");
-    cCharge2->Update();
+      // Plot induced charge
+      sensor.IntegrateSignal(name2);
+      chargeView2->PlotSignal(name2);
+      cCharge2->Update();
+    }
   }
   LOG("Script: Total induced charge = " << sensor.GetTotalInducedCharge("strip_0")<< " [fC].");
 

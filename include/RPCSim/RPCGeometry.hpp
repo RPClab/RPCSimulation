@@ -24,8 +24,8 @@ public:
   RPCGeometry();
   void putOnTop(PCBGeometry&);
   void putOnBottom(PCBGeometry&);
-  void setLength(const double& length=5) { m_dimensions[0]=length;}
-  void setWidth(const double& width=5) { m_dimensions[1]=width;}
+  void setLength(const double& length=50) { m_dimensions[0]=length;}
+  void setWidth(const double& width=50) { m_dimensions[1]=width;}
   void fillGasGap(RPCSim::GasMixture* gas_mixture);
   void setElectrodeMaterial(const RPCSim::Medium& medium = RPCSim::Glass());
   void build();

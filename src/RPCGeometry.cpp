@@ -101,6 +101,7 @@ void RPCSim::RPCGeometry::build()
   gas->SetLineColor(kWhite);
   gas->SetTransparency(80);
   universe->AddNode(gas,1,new TGeoTranslation(0,position,0));
+    std::cout<<"Gas position"<<position<<"+-"<<m_gasGapThickness<<std::endl;
   // Cathode
   position+=m_electrodeThickness/2.+m_gasGapThickness/2;
   TGeoVolume* cathode = gGeoManager->MakeBox("Cathode",m_electrode_medium(),m_dimensions.length()/2.,m_electrodeThickness/2.0,m_dimensions.width()/2.0);
@@ -120,6 +121,7 @@ void RPCSim::RPCGeometry::build()
   mylar_layer_2->SetTransparency(30);
   universe->AddNode(mylar_layer_2,1,new TGeoTranslation(0,position,0));
   m_HVCathodePosition=position+m_mylarThickness/2.-m_graphiteThickness-m_mylarThickness;
+  universe->SavePrimitive(std::cout);
 }
 
   double RPCSim::RPCGeometry::HVAnodePosition()
@@ -134,11 +136,25 @@ void RPCSim::RPCGeometry::build()
 
 Garfield::Geometry* RPCSim::RPCGeometry::getGeometry()
 {
-  build(); //GOOD OR NOT
-  static Garfield::GeometryRoot* geo = new Garfield::GeometryRoot();
-  // Pass the pointer to the TGeoManager.
-  geo->SetGeometry(gGeoManager);
-  geo->SetMedium("Gas", m_gas_mixture->getMagboltzMedium());
+  static Garfield::GeometryRoot* geo = nullptr;
+  if(geo==nullptr)
+  {
+    geo=new Garfield::GeometryRoot();
+    geo->EnableDebugging();
+    // Pass the pointer to the TGeoManager.
+    geo->SetGeometry(gGeoManager);
+    geo->SetMedium("Gas", m_gas_mixture->getMagboltzMedium());
+      //Garfield::Medium* kkk = nullptr;
+   //double pos=-5000;
+  //while(kkk==nullptr)
+  //{
+    
+    //kkk= geo->GetMedium(0,pos,0);
+    //pos+=0.01;
+    //std::cout<<pos<<std::endl;
+ // }
+  //std::cout<<"FIND PPPDPDPDPDPPD"<<pos<<std::endl;
+  }
   return geo;
 }
 

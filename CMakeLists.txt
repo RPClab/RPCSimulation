@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17 FATAL_ERROR) # 3.17 is the version available on the server
+cmake_minimum_required(VERSION 3.29 FATAL_ERROR) # 3.17 is the version available on the server
 
 project(RPCSimulation VERSION "0.1.0" DESCRIPTION "Simulation of RPCs" HOMEPAGE_URL "https://github.com/RPClab/RPCSimulation" LANGUAGES CXX)
 

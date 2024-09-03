@@ -19,6 +19,13 @@ else()
   endif()
 endif()
 
+include(FetchContent)
+FetchContent_Declare(cli11 GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git GIT_TAG v2.4.2 GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(cli11)
+
+FetchContent_Declare(spdlog GIT_REPOSITORY https://github.com/gabime/spdlog.git GIT_TAG v1.14.1 GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(spdlog)
+
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/DefaultFolders.hpp.in" "${PROJECT_BINARY_DIR}/include/RPCSim/DefaultFolders.hpp")
 add_library(RPCSim STATIC
 Exceptions.cpp
@@ -27,12 +34,15 @@ GasMixture.cpp
 PCBGeometry.cpp
 RPCGeometry.cpp
 Setup.cpp
+SignalPlotter.cpp
+Webserver.cpp
+Websocket.cpp
 )
-target_link_libraries(RPCSim PUBLIC Garfield::Garfield)
+target_link_libraries(RPCSim PUBLIC Garfield::Garfield ROOT::RHTTP spdlog::spdlog)
 target_link_directories(RPCSim PUBLIC "${CMAKE_INSTALL_FULL_LIBDIR}")
 target_include_directories(RPCSim PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include;${PROJECT_BINARY_DIR}/include>" "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 set_target_properties(RPCSim PROPERTIES PUBLIC_HEADER 
-"${PROJECT_BINARY_DIR}/include/RPCSim/DefaultFolders.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/GasMixture.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Setup.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Exceptions.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Dimensions.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/RPCGeometry.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/PCBGeometry.hpp"
+"${PROJECT_BINARY_DIR}/include/RPCSim/DefaultFolders.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Webserver.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/SignalPlotter.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/GasMixture.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Setup.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Exceptions.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/Dimensions.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/RPCGeometry.hpp;${PROJECT_SOURCE_DIR}/include/RPCSim/PCBGeometry.hpp"
 )
 install(TARGETS RPCSim
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
