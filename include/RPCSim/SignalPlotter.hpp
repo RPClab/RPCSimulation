@@ -3,7 +3,7 @@
 #include "Garfield/ViewSignal.hh"
 
 #include "TCanvas.h"
-#include <vector>
+#include "Webserver.hpp"
 
 namespace Garfield
 {
@@ -15,6 +15,13 @@ namespace RPCSim
   class SignalPlotter
   {
   public:
+    SignalPlotter()=default;
+    SignalPlotter(const std::string name, const std::string title)
+    {
+      m_canvas.SetName(name.c_str());
+      m_canvas.SetTitle(title.c_str());
+    };
+    void attach(Webserver& webserver);
     void setName(const std::string& name)
     { 
       m_canvas.SetName(name.c_str());
@@ -24,8 +31,7 @@ namespace RPCSim
     void setSensor(Garfield::Sensor* sensor);
     void draw()
     { 
-      //m_canvas.Update();
-      m_canvas.Draw();
+      m_canvas.Update();
     }
   private:
     TCanvas m_canvas;

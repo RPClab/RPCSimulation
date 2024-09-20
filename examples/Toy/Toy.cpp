@@ -1,15 +1,16 @@
+#include <Rtypes.h>
 #include <TApplication.h>
 #include <TGeoManager.h>
 #include <TROOT.h>
 #include <TSystem.h>
 #include <chrono>
-#include <mutex>
 #include <string>
 
 
 #include "Garfield/GeometryRoot.hh"
 #include "Garfield/AvalancheGrid.hh"
 #include "Garfield/AvalancheMC.hh"
+#include "Garfield/Random.hh"
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/SolidBox.hh"
@@ -18,6 +19,7 @@
 #include "Garfield/ViewField.hh"
 #include "Garfield/ViewGeometry.hh"
 #include "Garfield/ViewCell.hh"
+#include "Garfield/ViewDrift.hh"
 
 
 #include "spdlog/spdlog.h"
@@ -38,12 +40,20 @@
 #include "RPCSim/RPCGeometry.hpp"
 #include "RPCSim/PCBGeometry.hpp"
 
-#include <thread>
-#define LOG(x) std::cout << x << std::endl
-
 
 using namespace Garfield;
 
+
+auto timeFuncInvocation = 
+    [](auto&& func, auto&&... params) {
+        // get time before function invocation
+        const auto& start = std::chrono::high_resolution_clock::now();
+        // function invocation using perfect forwarding
+        std::forward<decltype(func)>(func)(std::forward<decltype(params)>(params)...);
+        // get time after function invocation
+        const auto& stop = std::chrono::high_resolution_clock::now();
+        return stop - start;
+     };
 
 #include <CLI/CLI.hpp>
 
@@ -82,22 +92,20 @@ int main(int argc, char *argv[]) try
 
   RPCSim::Webserver server("http:"+std::to_string(port),true);
 
-  // Geometry
-  // Create the ROOT geometry.
-TGeoManager* geoman = new TGeoManager("world", "geometry");
-// Create the ROOT material and medium.
-// For simplicity we use the predefined material "Vacuum".
-TGeoMaterial* matVacuum = new TGeoMaterial("Vacuum", 0, 0, 0);
-TGeoMedium* medVacuum = new TGeoMedium("Vacuum", 1, matVacuum);
-
-TGeoMedium* vacuum = new TGeoMedium("Vacuum",1,new TGeoMaterial("Vacuum", 0,0,0));
-TGeoVolume* universe = geoman->MakeBox("Universe", vacuum, 50, 0.1, 50.);
+// Geometry
+TGeoManager* geoman = new TGeoManager("RPC_Geometry", "RPC geometry");
+TGeoMedium* medVacuum = new TGeoMedium("Vacuum", 1,new TGeoMaterial("Vacuum", 0, 0, 0));
+TGeoVolume* universe = geoman->MakeBox("RPC", medVacuum, 50, 0.05, 50.);
 geoman->SetTopVolume(universe);
-// Dimensions of the tube
-// In this simple case, the tube is also the top volume.
-TGeoVolume* top = geoman->MakeBox("TOP", medVacuum, 100/2.0, 0.1/2.0, 100/2);
-universe->AddNode(top,1,new TGeoTranslation(0,0,0));
-top->SetLineColor(kRed);
+TGeoVolume* gas_gap = geoman->MakeBox("Gas gap", medVacuum, 100/2.0, 0.1/2.0, 100/2);
+gas_gap->SetFillColor(kBlue);
+universe->AddNode(gas_gap,1,new TGeoTranslation(0,0,0));
+TGeoVolume* top = geoman->MakeBox("Top graphite", medVacuum, 100/2.0, 0.1/2.0, 100/2);
+top->SetFillColor(kRed);
+universe->AddNode(top,1,new TGeoTranslation(0,0.1,0));
+TGeoVolume* bottom = geoman->MakeBox("Bottom graphite", medVacuum, 100/2.0, 0.1/2.0, 100/2);
+bottom->SetFillColor(kRed);
+universe->AddNode(bottom,1,new TGeoTranslation(0,-0.1,0));
 
 
 geoman->CloseGeometry();
@@ -107,6 +115,8 @@ server().Register("/Geometry", geoman);
 // Create the Garfield medium.
 MediumMagboltz* gas = new MediumMagboltz();
   gas->LoadGasFile(RPCSim::data_folder+"/examples/c2h2f4_94-7_iso_5_sf6_0-3_bis.gas");
+  gas->LoadIonMobility(RPCSim::garfield_install + "/share/Garfield/Data/IonMobility_C8Hn+_iC4H10.txt");
+  gas->LoadNegativeIonMobility(RPCSim::garfield_install+"/share/Garfield/Data/IonMobility_SF6-_SF6.txt");
   gas->Initialise();
 // Create the Garfield geometry.
 GeometryRoot* geo = new GeometryRoot();
@@ -119,15 +129,15 @@ geo->SetMedium("Vacuum", gas);
 
   Garfield::ComponentAnalyticField cmp;
   cmp.SetGeometry(geo);
-  cmp.SetMagneticField(0, 0, -100);
+  cmp.SetMagneticField(0, 0, 0);
   //cmp.EnableDebugging();
   
-  cmp.AddPlaneY(-0.05,0,"Anode");
-  cmp.AddPlaneY(0.05,-6200,"Cathode");
+  cmp.AddPlaneY(-0.15,0,"Anode");
+  cmp.AddPlaneY(0.15,-6200,"Cathode");
   constexpr double pitch = 4;
   constexpr double extar=0.1;
   const std::size_t nbr_strips{20};
-  for(std::size_t i=0;i!=nbr_strips;++i)
+  for(std::size_t i=0;i!=1;++i)
   {
     cmp.AddStripOnPlaneY('z', -0.5, i*pitch+(i*extar), (i+1)*pitch+(i*extar), "top_side_strip_"+std::to_string(i));
     cmp.AddStripOnPlaneY('z', 0.5, i*pitch+(i*extar), (i+1)*pitch+(i*extar), "bottom_side_strip_"+std::to_string(i)); // For now they are on the same direction //TODO CHECK THIS
@@ -142,7 +152,7 @@ geo->SetMedium("Vacuum", gas);
   sensor.AddComponent(&cmp);
   // Request signal calculation for the electrode named "s",
   // using the weighting field provided by the Component object cmp.
-  for(std::size_t i=0;i!=nbr_strips;++i)
+  for(std::size_t i=0;i!=1;++i)
   {
     sensor.AddElectrode(&cmp, "top_side_strip_"+std::to_string(i));
     sensor.AddElectrode(&cmp, "bottom_side_strip_"+std::to_string(i));
@@ -164,51 +174,10 @@ geo->SetMedium("Vacuum", gas);
   // Set time window where the calculations will be done microscopically.
   const double tMaxWindow = 2000;
   aval.SetTimeWindow(0., tMaxWindow);
+  // For ions
+  Garfield::AvalancheMC aval_MC;
+  aval_MC.SetSensor(&sensor);
 
-  // Preparing the plotting of the induced charge and signal of the electrode
-  // readout.
-  //ViewSignal *signalView = nullptr;
-  //TCanvas *cSignal = nullptr;
-  //if (plotSignal) {
-  //  cSignal = new TCanvas("cSignal", "", 600, 600);
-  //  signalView = new ViewSignal();
-  //  signalView->SetCanvas(cSignal);
-  //  signalView->SetSensor(&sensor);
-  //}
-
-  //ViewSignal *chargeView = nullptr;
-  //TCanvas *cCharge = nullptr;
-
-  //if (plotSignal) {
-  //  cCharge = new TCanvas("cCharge", "Charge", 600, 600);
-  //  chargeView = new ViewSignal();
-  //  chargeView->SetCanvas(cCharge);
-  //  chargeView->SetSensor(&sensor);
- /// }
-
-    // Preparing the plotting of the induced charge and signal of the electrode
-  // readout.
-  //ViewSignal *signalView2 = nullptr;
-  //TCanvas *cSignal2 = nullptr;
-  //if (plotSignal) {
-  //  cSignal2 = new TCanvas("cSignal2", "", 600, 600);
-  //  signalView2 = new ViewSignal();
-  //  signalView2->SetCanvas(cSignal2);
-   // signalView2->SetSensor(&sensor);
-  //}
-
-  //ViewSignal *chargeView2 = nullptr;
-  //TCanvas *cCharge2 = nullptr;
-
-  //if (plotSignal) {
-  //  cCharge2 = new TCanvas("cCharge2", "Charge", 600, 600);
-  //  chargeView2 = new ViewSignal();
-  //  chargeView2->SetCanvas(cCharge2);
-  //  chargeView2->SetSensor(&sensor);
-  //}
-
-
-  Garfield::ViewDrift view_drift;
   // Set up Heed.
   TrackHeed track;
   track.EnableDebugging();
@@ -216,14 +185,18 @@ geo->SetMedium("Vacuum", gas);
   track.SetSensor(&sensor);
   // Set the particle type and momentum [eV/c].
   track.SetParticle("muon");
-  track.SetMomentum(100.e6);
+  track.SetMomentum(200.e6);
   track.DisableDeltaElectronTransport();
 
 
-  //RPCSim::SignalPlotter plotter_bottom;
-  //plotter_bottom.setSensor(&sensor);
-  //RPCSim::SignalPlotter plotter_top;
-  //plotter_top.setSensor(&sensor);
+
+
+  RPCSim::SignalPlotter plotter_bottom(std::string("Bottom_strips_signal"),std::string("Signal from the bottom strips"));
+  plotter_bottom.setSensor(&sensor);
+  plotter_bottom.attach(server);
+  RPCSim::SignalPlotter plotter_top(std::string("Top_strips_signal"),std::string("Signal from the top strips"));
+  plotter_top.setSensor(&sensor);
+  plotter_top.attach(server);
   TCanvas general("gl_general","General variables",0,0,1820,1000);
   server().Register("/Monitoring", &general);
   server().SetItemField("/","_monitoring","100");
@@ -271,6 +244,18 @@ geo->SetMedium("Vacuum", gas);
   //TGraph2D cluster_position;
 
 
+  Garfield::ViewDrift primary;
+  primary.EnableDebugging();
+  server().Register("/Primaries",primary.GetCanvas());
+  primary.GetCanvas()->Update();
+  //track.EnablePlotting(&primary);
+
+  
+  Garfield::ViewDrift conduction;
+  server().Register("/Conduction",conduction.GetCanvas());
+  conduction.GetCanvas()->Update();
+  //aval.EnablePlotting(&conduction,100);
+  //aval_MC.EnablePlotting(&conduction);
 
   for(std::size_t event=0; event!=nbr_events; ++event)
   {
@@ -279,7 +264,7 @@ geo->SetMedium("Vacuum", gas);
       // Setting the timer for the running time of the algorithm.
       std::clock_t start = std::clock();
       double track_x{25.0};
-      double track_y{0.1};
+      double track_y{0.05};
       double track_z{5.0};
       double track_t{0};
       double track_dx{0.};
@@ -288,6 +273,8 @@ geo->SetMedium("Vacuum", gas);
       logger.info("Shooting an at position=({:+.2e},{:+.2e},{:+.2e}) cm, direction({:+.2e},{:+.2e},{:+.2e}) cm, time={:+.2e} ns, energy={:.2e} eV",track_x,track_y,track_z,track_dx,track_dy,track_dz,track_t,track.GetEnergy());
       track.NewTrack(track_x,track_y,track_z,track_t, 0., -1.0, 0.);
       track.DisableDeltaElectronTransport();
+      primary.Plot();
+      primary.GetCanvas()->Update();
       // Retrieve the clusters along the track.
       general.cd(1);
       nbr_cluster.Fill(track.GetClusters().size(),1.0);
@@ -298,7 +285,6 @@ geo->SetMedium("Vacuum", gas);
       {
         static std::size_t cluster_nr{0};
         logger.info("cluster {}/{} at position=({:+.2e},{:+.2e},{:+.2e}) from track, created {:+.2e}ns after track, energy={:+.2e}",cluster_nr+1,track.GetClusters().size(), cluster.x-track_x,cluster.y-track_y,cluster.z-track_z,cluster.t-track_t,cluster.energy);
-        if(++cluster_nr==track.GetClusters().size()) cluster_nr=0;
         energy+=cluster.energy;
         general.cd(3);
         cluster_dt.Fill(cluster.t-track_t);
@@ -322,71 +308,59 @@ geo->SetMedium("Vacuum", gas);
         nbr_electrons.Fill(cluster.electrons.size(),1.0);
         nbr_electrons.Draw();
         general.Update();
-        //cluster_position.AddPoint(cluster.x,cluster.y,cluster.z);
-        //general.cd(3);
-        //cluster_position.Draw("p0");
-        //general.Update();
-      //std::cout<<"x:"<<cluster.x<<" y:"<<cluster.y<<" z:"<<cluster.z<<" e:"<<cluster.energy<<" t:"<<cluster.t<<" extra"<<cluster.extra<<std::endl;
-      //std::cout<<cluster.electrons.size()<<" "<<cluster.ions.size()<<" "<<cluster.photons.size()<<std::endl;
-      // Loop over the electrons in the cluster.
+      logger.warn("Now the photons !!!");
+      for(std::size_t p=0;p!=cluster.photons.size();++p)
+      {
+        int ne{0};
+        int ni{0};
+        int np{0};// CHECK I need to drift them
+        track.TransportPhoton(cluster.photons[p].x, cluster.photons[p].y, cluster.photons[p].z, cluster.photons[p].t, cluster.photons[p].e,Garfield::RndmUniform(),Garfield::RndmUniform(),Garfield::RndmUniform(), ne,ni,np);
+        logger.error("Photon {}/{} has created {}e-, {}ions, {}fluorescent photons",p+1,cluster.photons.size(),ne,ni,np);
+      }
+      logger.warn("Now the ions !!!");
+      for(std::size_t i=0;i!=cluster.ions.size();++i)
+      {
+        aval_MC.DriftIon(cluster.ions[i].x,cluster.ions[i].y,cluster.ions[i].z,cluster.ions[i].t);
+        logger.error("Ions {}/{} at position=({:+.2e},{:+.2e},{:+.2e}) time={:+.2e} has drifted",i+1,cluster.ions.size(),cluster.ions[i].x,cluster.ions[i].y,cluster.ions[i].z,cluster.ions[i].t);
+      }
+      
+      std::chrono::duration<double, std::milli> electron_drift_computation_time{0};
       for(const auto &electron : cluster.electrons)
       {
         static std::size_t electron_nbr{0};
-        logger.info("Avalanching e− {}/{} at position=({:+.2e},{:+.2e},{:+.2e}) cm, direction({:+.2e},{:+.2e},{:+.2e}) cm, time={:+.2e} ns, energy={:.2e} eV",++electron_nbr,cluster.electrons.size(),electron.x,electron.y,electron.z,electron.dx,electron.dy,electron.dz,electron.t,electron.e);
-        aval.AvalancheElectron(electron.x, electron.y, electron.z, electron.t,electron.e,electron.dx,electron.dy, electron.dz);
-        if(electron_nbr==cluster.electrons.size()) electron_nbr=0;
+        std::chrono::duration<double, std::milli> duration=timeFuncInvocation(
+          [&](auto&& cluster, auto&& electron){
+              logger.info("Avalanching e- {}/{} at position=({:+.2e},{:+.2e},{:+.2e}) cm, direction({:+.2e},{:+.2e},{:+.2e}) cm, time={:+.2e} ns, energy={:.2e} eV",electron_nbr+1,cluster.electrons.size(),electron.x,electron.y,electron.z,electron.dx,electron.dy,electron.dz,electron.t,electron.e);
+              aval.AvalancheElectron(electron.x, electron.y, electron.z, electron.t,electron.e,electron.dx,electron.dy, electron.dz);
+
+            }
+            ,cluster,electron
+        );
+        logger.warn("e- {}/{} has been processed in {:+.3e}ms",electron_nbr+1,cluster.electrons.size(),duration.count());
+        electron_drift_computation_time+=duration;
+        if(++electron_nbr==cluster.electrons.size()) electron_nbr=0;
       }
+      logger.warn("cluster {}/{}, all e- has been processed in {:+.3e}ms",cluster_nr+1,track.GetClusters().size(),electron_drift_computation_time.count());
+      if(++cluster_nr==track.GetClusters().size()) cluster_nr=0;
 
       }
+      conduction.Plot();
+      conduction.GetCanvas()->Update();
       general.cd(2);
       cluster_energy.Fill(energy,1.0);
       cluster_energy.Draw();
       general.Update();
-      double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-
-    LOG("Script: Electrons have drifted. It took " << duration << "s to run.");
     
-
-
-
-
-  //if (plotSignal) {
-  //  for(std::size_t i =0; i!=1 ;++i)
-  //  {
-  //    std::string name{"strip_top_"+std::to_string(i)};
-  //    std::string name2{"strip_bottom_"+std::to_string(i)};
-      // Plot signals
-  //    signalView->PlotSignal(name);
-  //    cSignal->Update();
-      //gSystem->ProcessEvents();
-
-      // Plot induced charge
-  //    sensor.IntegrateSignal(name);
-  //    chargeView->PlotSignal(name);
-  //    cCharge->Update();
-      //gSystem->ProcessEvents();
-
-      // Plot signals
-  //    signalView2->PlotSignal(name2);
-  //    cSignal2->Update();
-      //gSystem->ProcessEvents();
-
-      // Plot induced charge
-  //    sensor.IntegrateSignal(name2);
-  //    chargeView2->PlotSignal(name2);
-  //    cCharge2->Update();
-   // }
- // }
-    LOG("Script: Total induced charge = " << sensor.GetTotalInducedCharge("strip_0")<< " [fC].");
+   // LOG("Script: Total induced charge = " << sensor.GetTotalInducedCharge("strip_0")<< " [fC].");
     //plotter_top.setName("Top side Event "+std::to_string(event));
 
     //plotter_bottom.setName("Bottom side Event "+std::to_string(event));
 
-    for(std::size_t i=0;i!=nbr_strips;++i)
-    {
-      //plotter_top.plotSignal("top_side_strip_",i);
-      //plotter_bottom.plotSignal("bottom_side_strip_",i);
-    }
+    //for(std::size_t i=0;i!=nbr_strips;++i)
+    //{
+    //  plotter_top.plotSignal("top_side_strip_",i);
+    //  plotter_bottom.plotSignal("bottom_side_strip_",i);
+    //}
   
     //plotter_top.draw();
     //plotter_bottom.draw();

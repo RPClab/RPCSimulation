@@ -26,17 +26,25 @@ FetchContent_MakeAvailable(cli11)
 FetchContent_Declare(spdlog GIT_REPOSITORY https://github.com/gabime/spdlog.git GIT_TAG v1.14.1 GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(spdlog)
 
+FetchContent_Declare(EcoMug GIT_REPOSITORY https://github.com/dr4kan/EcoMug.git GIT_TAG v2.1 GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(EcoMug)
+add_library(EcoMug INTERFACE)
+target_include_directories(EcoMug INTERFACE "${ecomug_SOURCE_DIR}")
+
+
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/DefaultFolders.hpp.in" "${PROJECT_BINARY_DIR}/include/RPCSim/DefaultFolders.hpp")
 add_library(RPCSim STATIC
-Exceptions.cpp
-Medium.cpp
-GasMixture.cpp
-PCBGeometry.cpp
-RPCGeometry.cpp
-Setup.cpp
-SignalPlotter.cpp
-Webserver.cpp
-Websocket.cpp
+new/GasMixture.cpp
+new/WebServer.cpp
+#Exceptions.cpp
+#Medium.cpp
+#GasMixture.cpp
+#PCBGeometry.cpp
+#RPCGeometry.cpp
+#Setup.cpp
+#SignalPlotter.cpp
+#Webserver.cpp
+#Websocket.cpp
 )
 target_link_libraries(RPCSim PUBLIC Garfield::Garfield ROOT::RHTTP spdlog::spdlog)
 target_link_directories(RPCSim PUBLIC "${CMAKE_INSTALL_FULL_LIBDIR}")

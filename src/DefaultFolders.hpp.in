@@ -12,7 +12,8 @@ namespace RPCSim
    * 
    */
    static const std::string garfield_install{"@CMAKE_INSTALL_PREFIX@"};
-   static const std::string heed_database{"@CMAKE_INSTALL_FULL_DATAROOTDIR@/Heed/database"};
+   static const std::string heed_database{garfield_install+"/share/Heed/database"};
+   static const std::string ions_mobility{garfield_install+"/share/Garfield/Data"};
 
 
   static void setEnv()
